@@ -9,7 +9,7 @@
     pwm_clk_div = freq_clk_sys / freq_PWM * (wrap + 1)
 */
 
-#define led_pin 11
+#define led_pin 12
 #define servo_pin 22
 #define pwm_wrap 20000 // Periodo de 20ms (50hz) para o servomotor 
 #define pwm_clk_div 125 
@@ -67,13 +67,11 @@ int main()
         // Alterna entre aumento e redução do level PWM 
         if(estado){
             level += step; // Incrementa o level de PWM
-            printf("Incrementando: %i\n", level);
             if(level >= level_180){
                 estado = false; // Alterna o estado do movimento 
             }
         }else{
             level -= step;  // Decrementa o level de PWM
-            printf("Decrementando: %i\n", level);
             if(level <= level_0){
                 estado = true;  // Alterna o estado do movimento 
             }

@@ -4,7 +4,7 @@ Tarefa do EmbarcaTech que propôs a implementação de um sistema com a ferramen
 # Vídeo Explicativo
 A seguir um vídeo explicativo sobre o projeto.
 
-"link"
+https://drive.google.com/file/d/1pf84WA5uoHOo9-sdUQq76eOhkk3j2HkY/view?usp=sharing
 
 # Intruções
 Para executar o código em questão, deve-se possuir a extensão Wokwi Simulator instalada no Visual Studio Code e acesso a placa BitDogLab. 

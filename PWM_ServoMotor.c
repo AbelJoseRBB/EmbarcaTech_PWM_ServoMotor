@@ -4,79 +4,91 @@
 
 /*
     freq_PWM = 50Hz
-    Wrap = 20000 
+    wrap = 20000 
     freq_clk_sys = 125 * 10^6 Hz
-    pwm_clk_div = freq_clk_sys / freq_PWM * (Wrap + 1)
+    pwm_clk_div = freq_clk_sys / freq_PWM * (wrap + 1)
 */
 
-#define led_pin 13
+#define led_pin 11
 #define servo_pin 22
 #define pwm_wrap 20000 // Periodo de 20ms (50hz) para o servomotor 
-#define pwm_clk_div 125
+#define pwm_clk_div 125 
 
-#define dutyCycle_180 0.12 
-#define dutyCycle_90 0.0735
+// Define o duty cycle dos ângulos 0°, 90° e 180°
 #define dutyCycle_0 0.025
+#define dutyCycle_90 0.0735
+#define dutyCycle_180 0.12 
 
-#define level_0 (dutyCycle_0 * pwm_wrap) 
-#define level_90 (dutyCycle_90 * pwm_wrap)
-#define level_180 (dutyCycle_180 * pwm_wrap)
+// Define o incremente/decremento do level de PWM
 #define step 5
 
+// Define o level de PWM para o ângulos 0°, 90° e 180°
+const uint16_t level_0 = (dutyCycle_0 * pwm_wrap); 
+const uint16_t level_90 = (dutyCycle_90 * pwm_wrap);
+const uint16_t level_180 = (dutyCycle_180 * pwm_wrap);
+
+// Define um estado do movimento 
 volatile bool estado = true;
 
-void inicializar_pwm();
+// Declara as funções utilizadas 
+void inicializar_pwm(uint gpio);
 void ajustar_angulo(uint gpio, uint angulo);
 
 int main()
 {
     stdio_init_all();
-    inicializar_pwm();
 
-    ajustar_angulo(servo_pin, 180);
+    inicializar_pwm(servo_pin); // Chama a função para inicializar PWM do servomotor
+    inicializar_pwm(led_pin);   // Chama a função para inicializar PWM do LED
+
+    // Ajusta movimento do servomotor e intensidade do LED  
+    ajustar_angulo(servo_pin, 180); 
     ajustar_angulo(led_pin, 180);
     printf("Ângulo = 180°\n");
-    sleep_ms(5000);
+    sleep_ms(5000); // Delay de 5s
+
     ajustar_angulo(servo_pin, 90);
     ajustar_angulo(led_pin, 90);
     printf("Ângulo = 90°\n");
-    sleep_ms(5000);
+    sleep_ms(5000); // Delay de 5s
+
     ajustar_angulo(servo_pin, 0);
     ajustar_angulo(led_pin, 0);
     printf("Ângulo = 0°\n");
-    sleep_ms(5000);
+    sleep_ms(5000); // Delay de 5s
         
     while (true) {
         static uint16_t level = level_0;
+
+        // Aplica o level PWM atual para servo e LED
         pwm_set_gpio_level(servo_pin, level);
         pwm_set_gpio_level(led_pin, level);
 
+        // Alterna entre aumento e redução do level PWM 
         if(estado){
-            level += step;
-            printf("incrementando: %i\n", level);
+            level += step; // Incrementa o level de PWM
+            printf("Incrementando: %i\n", level);
             if(level >= level_180){
-                estado = false;
+                estado = false; // Alterna o estado do movimento 
             }
         }else{
-            level -= step;
-            printf("decrementando: %i\n", level);
+            level -= step;  // Decrementa o level de PWM
+            printf("Decrementando: %i\n", level);
             if(level <= level_0){
-                estado = true;
+                estado = true;  // Alterna o estado do movimento 
             }
         }
-        sleep_ms(10);
+        sleep_ms(10); // Delay 10ms 
     }
 }
 
-void inicializar_pwm(){
-    gpio_set_function(led_pin, GPIO_FUNC_PWM);
-    uint slice = pwm_gpio_to_slice_num(led_pin);
-    pwm_set_wrap(slice, pwm_wrap);
-    pwm_set_clkdiv(slice, pwm_clk_div);
-    pwm_set_enabled(slice, true);
-
-    gpio_set_function(servo_pin, GPIO_FUNC_PWM);
-    uint slice_num = pwm_gpio_to_slice_num(servo_pin);
+/*
+ *Inicializa os GPIOS e configura o PWM
+ *Configura o divisor de clock, wrap e habilita o PWM
+ */ 
+void inicializar_pwm(uint gpio){
+    gpio_set_function(gpio, GPIO_FUNC_PWM);
+    uint slice_num = pwm_gpio_to_slice_num(gpio);
 
     pwm_config config = pwm_get_default_config();
     pwm_config_set_clkdiv(&config, pwm_clk_div);
@@ -84,17 +96,17 @@ void inicializar_pwm(){
     pwm_init(slice_num, &config, true);
 }
 
-
+// Ajusta o level de PWM no GPIO com base no ângulo especificado (0°, 90° ou 180°)
 void ajustar_angulo(uint gpio, uint angulo){   
-    if(!angulo){
+    switch (angulo){
+    case 0:
         pwm_set_gpio_level(gpio, level_0);
-    }else{
-        if(angulo == 90){
-            pwm_set_gpio_level(gpio, level_90);
-        }else{
-            if(angulo == 180){
-                pwm_set_gpio_level(gpio, level_180);
-            }
-        }
+        break;
+    case 90:
+        pwm_set_gpio_level(gpio, level_90);
+        break;
+    case 180:
+        pwm_set_gpio_level(gpio, level_180);
+        break;
     }
 }
